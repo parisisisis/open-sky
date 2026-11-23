@@ -225,16 +225,6 @@ footer{position:relative;z-index:5}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:28px;padding-bottom:40px;font-size:14px;color:var(--muted)}
 footer .k{font-family:var(--brush);color:var(--amber)}
 
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .js .reveal{opacity:1;transform:none;filter:none;transition:none}
-  .js .wipe>span{clip-path:none;transform:none;transition:none}
-  .js .split .ch{transform:none;opacity:1}
-  .entered .split .ch{animation:none}
-  .mq.a,.mq.b,.playing .ring,.playing .eq i,.scroll i::after,.enter .k,.enter .h i{animation:none}
-  .bg video,.hero-in{transform:none}
-  .embers,.glow{display:none}
-}
 </style>
 </head>
 <body>
@@ -409,7 +399,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 <script>
 (function(){
   var root=document.documentElement, body=document.body;
-  var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+  var reduce=false; /* animations always on, even if the device asks for reduced motion */
   var fine=false; try{ fine=matchMedia('(pointer: fine)').matches; }catch(e){}
   var vid=document.getElementById('bgvid'), a=document.getElementById('music'), enter=document.getElementById('enter');
   var nav=document.getElementById('nav'), glow=document.getElementById('glow');
