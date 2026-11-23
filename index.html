@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Yuji+Boku&display=swap">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');if('scrollRestoration' in history)history.scrollRestoration='manual';</script>
 <style>
 :root{
   --ink:#040918;
@@ -83,6 +83,7 @@ a,img,svg,video,canvas{-webkit-user-drag:none}
 
 /* page fades in after the eye opens */
 .nav,main,.marquee,.contact,footer{transition:opacity 1.1s ease .2s}
+.js body:not(.entered){overflow:hidden}
 .js body:not(.entered) .nav,.js body:not(.entered) main,.js body:not(.entered) .marquee,.js body:not(.entered) .contact,.js body:not(.entered) footer{opacity:0}
 
 /* ---------- nav ---------- */
@@ -261,7 +262,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
   <span class="enter-in">
     <span class="k" lang="ja" aria-hidden="true">瞳</span>
     <span class="t">Open your eyes</span>
-    <span class="h"><i aria-hidden="true"></i>Click anywhere to enter · sound on</span>
+    <span class="h"><i aria-hidden="true"></i>Click anywhere to enter</span>
   </span>
 </button>
 
@@ -420,6 +421,12 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 <script>
 (function(){
   var root=document.documentElement, body=document.body;
+  /* always start at the very top: ignore saved scroll position and #links in the address */
+  function toTop(){ try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }catch(e){ window.scrollTo(0,0); } }
+  if(location.hash && history.replaceState) history.replaceState(null,'',location.pathname+location.search);
+  toTop();
+  window.addEventListener('load',toTop);
+  window.addEventListener('pageshow',toTop);
   var reduce=false; /* animations always on, even if the device asks for reduced motion */
   var fine=false; try{ fine=matchMedia('(pointer: fine)').matches; }catch(e){}
   var vid=document.getElementById('bgvid'), a=document.getElementById('music'), enter=document.getElementById('enter');
