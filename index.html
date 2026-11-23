@@ -230,7 +230,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 <body>
 
 <div class="bg" aria-hidden="true">
-  <video id="bgvid" src="eye.mp4" autoplay muted loop playsinline preload="auto"></video>
+  <video id="bgvid" autoplay muted loop playsinline preload="auto"></video>
 </div>
 <div class="veil" aria-hidden="true"></div>
 <div class="veil2" aria-hidden="true"></div>
@@ -418,6 +418,20 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 
   /* ---------- background video ---------- */
   function playVid(){ vid.muted=true; var p=vid.play(); if(p&&p.catch)p.catch(function(){}); }
+  /* 4K only for big, sharp screens; everyone else gets the 1080p version */
+  var HI='eye.mp4', LO='eye-1080.mp4';
+  var px=Math.max(screen.width||0,screen.height||0)*(window.devicePixelRatio||1);
+  vid.src=(px>=2600)?HI:LO;
+  function toLow(){ if(vid.currentSrc.indexOf(LO)>-1||vid.getAttribute('src')===LO) return; vid.src=LO; vid.load(); playVid(); }
+  vid.addEventListener('error',toLow);
+  /* watchdog: if the background isn't moving, nudge it, then fall back to 1080p */
+  var lastT=-1, stuck=0;
+  setInterval(function(){
+    if(document.hidden) return;
+    var ct=vid.currentTime;
+    if(ct===lastT){ stuck++; playVid(); if(stuck>=2) toLow(); } else stuck=0;
+    lastT=ct;
+  },1500);
   playVid(); vid.addEventListener('canplay',playVid,{once:true});
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) playVid(); });
 
@@ -460,6 +474,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
   }); });
   ['pointerdown','keydown','touchend'].forEach(function(ev){
     document.addEventListener(ev,function(e){
+      if(vid.paused) playVid();
       if(e.target.closest && e.target.closest('.js-toggle')) return;
       if(!analyser && !a.paused) hookAnalyser();
       if(userPaused||!a.paused) return;
