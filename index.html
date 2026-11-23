@@ -205,7 +205,13 @@ section{scroll-margin-top:90px}
 .trk .bb{position:relative;flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden;cursor:pointer}
 .trk .bf{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--ember),var(--amber));border-radius:4px}
 .bigplay{width:84px;height:84px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--amber);color:var(--ink);cursor:pointer;flex:none;box-shadow:0 0 calc(10px + var(--beat) * 40px) rgba(255,140,60,.6)}
-@media (max-width:760px){.player{grid-template-columns:1fr;justify-items:start}.ring{width:120px;height:120px}}
+.ctrls{display:grid;grid-template-columns:auto auto;align-items:center;justify-items:center;gap:14px 14px}
+.skip{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text);background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.3);transition:border-color .25s,color .25s,background .25s}
+.skip:hover{border-color:var(--amber);color:var(--amber);background:rgba(255,170,77,.08)}
+.upnext{grid-column:1 / -1;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.np-swap{animation:swap .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes swap{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (max-width:760px){.player{grid-template-columns:1fr;justify-items:start}.ctrls{justify-items:start}.ring{width:120px;height:120px}}
 
 /* ---------- marquee ---------- */
 .marquee{position:relative;z-index:5;overflow:hidden;padding:26px 0;margin:40px 0;transform:rotate(-2deg) scale(1.04);background:rgba(4,9,28,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-top:1px solid rgba(255,170,77,.35);border-bottom:1px solid rgba(255,170,77,.35)}
@@ -241,7 +247,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 <div class="veil2" aria-hidden="true"></div>
 <canvas class="embers" id="embers" aria-hidden="true"></canvas>
 <div class="glow" id="glow" aria-hidden="true"></div>
-<audio id="music" src="music.mp3" loop preload="auto"></audio>
+<audio id="music" preload="auto"></audio>
 
 <button type="button" class="enter" id="enter" aria-label="Enter the site and start the music">
   <span class="line" aria-hidden="true"></span>
@@ -266,7 +272,7 @@ footer .k{font-family:var(--brush);color:var(--amber)}
         <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l13-7.5z"/></svg>
         <svg class="ico-pause" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
       </span>
-      <span class="meta"><small id="pill-state">Paused</small><strong>Duvet — bôa</strong></span>
+      <span class="meta"><small id="pill-state">Paused</small><strong id="pill-song">Duvet — bôa</strong></span>
       <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     </button>
   </div>
@@ -353,19 +359,25 @@ footer .k{font-family:var(--brush);color:var(--amber)}
         <div class="ring" aria-hidden="true"><div class="core"><div class="pupil"></div></div></div>
         <div class="info">
           <p class="eyebrow">03 — Now playing</p>
-          <p class="title">Duvet</p>
-          <p class="artist">bôa</p>
+          <p class="title" id="np-title">Duvet</p>
+          <p class="artist" id="np-artist">bôa</p>
           <canvas class="viz" id="viz" aria-hidden="true"></canvas>
           <div class="trk">
             <span id="t-cur">0:00</span>
             <div class="bb" id="seek"><div class="bf" id="t-bar"></div></div>
-            <span id="t-dur">3:23</span>
+            <span id="t-dur">0:00</span>
           </div>
         </div>
-        <button type="button" class="bigplay js-toggle magnetic" aria-pressed="false" aria-label="Play music">
-          <svg class="ico-play" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l13-7.5z"/></svg>
-          <svg class="ico-pause" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
-        </button>
+        <div class="ctrls">
+          <button type="button" class="bigplay js-toggle magnetic" aria-pressed="false" aria-label="Play music">
+            <svg class="ico-play" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l13-7.5z"/></svg>
+            <svg class="ico-pause" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          </button>
+          <button type="button" class="skip magnetic" id="skip" aria-label="Next song">
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 5v14l10-7zM17 5h2.5v14H17z"/></svg>
+          </button>
+          <span class="upnext" id="upnext">Up next: Loverboy</span>
+        </div>
       </div>
     </div>
   </section>
@@ -442,6 +454,20 @@ footer .k{font-family:var(--brush);color:var(--amber)}
 
   /* ---------- music + live beat ---------- */
   a.volume=0.55;
+  /* playlist: random song first, then they take turns */
+  var songs=[{src:'music.mp3',title:'Duvet',artist:'bôa'},{src:'loverboy.mp3',title:'Loverboy',artist:'A-Wall'}];
+  var cur=Math.floor(Math.random()*songs.length);
+  function showSong(animate){
+    var s=songs[cur], nx=songs[(cur+1)%songs.length];
+    var tt=document.getElementById('np-title'), ar=document.getElementById('np-artist');
+    tt.textContent=s.title; ar.textContent=s.artist;
+    document.getElementById('pill-song').textContent=s.title+' — '+s.artist;
+    document.getElementById('upnext').textContent='Up next: '+nx.title;
+    document.getElementById('t-cur').textContent='0:00'; document.getElementById('t-bar').style.width='0%';
+    if(animate){ [tt,ar].forEach(function(el){ el.classList.remove('np-swap'); void el.offsetWidth; el.classList.add('np-swap'); }); }
+  }
+  function loadSong(i,animate){ cur=(i+songs.length)%songs.length; a.src=songs[cur].src; a.load(); showSong(animate); }
+  loadSong(cur,false);
   var userPaused=false, ctx=null, analyser=null, freq=null, beat=0;
   function canAnalyse(){ return /^https?:$/.test(location.protocol) && (window.AudioContext||window.webkitAudioContext); }
   function hookAnalyser(){
@@ -465,6 +491,8 @@ footer .k{font-family:var(--brush);color:var(--amber)}
   }
   function playMusic(fromGesture){ if(fromGesture) hookAnalyser(); var p=a.play(); return (p&&p.then)?p:Promise.resolve(); }
   a.addEventListener('play',ui); a.addEventListener('pause',ui);
+  a.addEventListener('ended',function(){ loadSong(cur+1,true); playMusic(false).catch(function(){}); });
+  document.getElementById('skip').addEventListener('click',function(e){ e.stopPropagation(); userPaused=false; loadSong(cur+1,true); playMusic(true).catch(function(){}); });
   a.addEventListener('loadedmetadata',function(){ document.getElementById('t-dur').textContent=fmt(a.duration); });
   a.addEventListener('timeupdate',function(){
     document.getElementById('t-cur').textContent=fmt(a.currentTime);
